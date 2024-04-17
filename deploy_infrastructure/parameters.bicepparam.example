@@ -1,0 +1,11 @@
+using './main.bicep'
+
+param acrName = $ACR_NAME
+param random = $RAND
+param serviceCIDR = '10.1.0.0/24'
+param dnsServiceIP = '10.1.0.10'
+param aksClusterName = $AKS_CLUSTER_NAME
+param virtualNetworkName = $VIRTUAL_NETWORK_NAME
+param subnetName = $SUBNET_NAME
+param adminUsername = $ADMIN_USERNAME
+param sshRSAPublicKey = $SSH_RSA_PUB_KEY

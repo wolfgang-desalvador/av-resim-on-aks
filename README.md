@@ -21,10 +21,11 @@ export RESOURCE_GROUP_NAME=
 export AKS_CLUSTER_NAME=
 export LOCATION=
 export VIRTUAL_NETWORK_NAME=
-export VIRTUAL_NETWORK_ID=
-export SUBNET_NAME=
-export SUBNET_ID="$VIRTUAL_NETWORK_ID/subnets/$SUBNET_NAME"
+export ADMIN_USERNAME=
+export SSH_RSA_PUB_KEY=
 export ACR_NAME=
+export RAND=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 | awk '{print tolower($0)}')
+
 ```
 
 ## Login in Azure CLI
@@ -35,39 +36,16 @@ Here we will assume that we are using an Azure VM with a System Assigned Identit
 az login --identity
 ```
 
-## Create Azure Kuberentes Cluster
+## Deploy the infrastructure
 
-As a first step let's create an AKS cluster in private networking mode, on-boarding the existing Virtual Network. We are going also to use Azure RBAC with AAD integration for access/authorization management.
-
-```bash
-az aks create --resource-group $RESOURCE_GROUP_NAME --name $AKS_CLUSTER_NAME --node-count 2 --generate-ssh-keys --enable-private-cluster --vnet-subnet-id $SUBNET_ID --enable-aad --enable-azure-rbac --tier free --kubernetes-version 1.28.5 --auto-upgrade-channel none --network-plugin azure --network-policy calico
-```
-
-## Create Azure Container Registry
+As a first step let's deploy the blueprint infrastructure that will be composed by:
+* An Azure Kuberentes Cluster in Private Networking mode
+* An Azure Container Registry with a Private Endpoint
+* One input storage account and one output storage account that will be used for data read/write
 
 ```bash
-az acr create --resource-group $RESOURCE_GROUP_NAME --name $ACR_NAME --sku Premium --allow-trusted-services false --default-action deny --public-network-enabled false
-
-az network private-dns zone create --resource-group $RESOURCE_GROUP_NAME --name "privatelink.azurecr.io"
-
-az network private-dns link vnet create \
-  --resource-group $RESOURCE_GROUP_NAME \
-  --zone-name "privatelink.azurecr.io" \
-  --name MyDNSLink \
-  --virtual-network $VIRTUAL_NETWORK_NAME \
-  --registration-enabled false
-  
-REGISTRY_ID=$(az acr show --name $ACR_NAME \
-  --query 'id' --output tsv)
-
-az network private-endpoint create \
-    --name acr-pe \
-    --resource-group $RESOURCE_GROUP_NAME \
-    --vnet-name $VIRTUAL_NETWORK_NAME \
-    --subnet $SUBNET_NAME \
-    --private-connection-resource-id $REGISTRY_ID \
-    --group-ids registry \
-    --connection-name myConnection
+envsubst < deploy_infrastructure/parameters.bicepparam.example >  deploy_infrastructure/parameters.bicepparam
+az deployment group create -g $RESOURCE_GROUP_NAME --template-file deploy_infrastructure/main.bicep --parameters deploy_infrastructure/parameters.bicepparam
 ```
 
 ## Attach Azure Container registry to the Azure Kubernetes Cluster
@@ -179,4 +157,23 @@ kubectl patch clusterpolicy/cluster-policy \
 export NUMBER_OF_JOBS=10
 envsubst < sample_jobs/gpu_test/template_job.yaml | kubectl apply -f -
 ```
+
+## Deploy the Azure Blob Storage CSI Driver
+
+```bash
+helm repo add blob-csi-driver https://raw.githubusercontent.com/kubernetes-sigs/blob-csi-driver/master/charts
+helm install blob-csi-driver blob-csi-driver/blob-csi-driver --set node.enableBlobfuseProxy=true --namespace kube-system --set node.blobfuseProxy.blobfuse2Version="2.2.1" --version v1.24.1 --wait
+```
+
+## Create PV and PVC on AKS
+
+
+```bash
+export INPUT_STORAGE_ACCOUNT="input-${RAND}"
+export OUTPUT_STORAGE_ACCOUNT="output-${RAND}"
+envsubst < aks_volumes/volumes.yaml | kubectl apply -f -
+```
+
+## Submit an example job which is performing I/O
+
 
