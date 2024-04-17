@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: run-<JOB_ID>
+  name: run-<JOB_ID>
+spec:
+  template:
+    metadata:
+      labels:
+        app: run-<JOB_ID>
+    spec:
+      initContainers:
+      - name: init-folders
+        image: alpine:latest
+        command: ["mkdir /output/<UUID> && mkdir /input/<UUID>"]
+        volumeMounts:
+        - mountPath: /output
+          name: bloboutput
+          readOnly: false
+        - mountPath: /input
+          name: blobinput
+          readOnly: false
+      containers:
+      - name: run-<JOB_ID>
+        image: <ACR_NAME>/io-test:latest
+        args: ["/etc/scripts/generate.sh && /etc/scripts/read.sh"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /output
+          name: bloboutput
+          readOnly: false
+          subPath: "<UUID>"
+        - name: blobinput
+          mountPath: "/runtime"
+          readOnly: true
+          subPath: "<DATASET>"
+      - name: samples-tf-mnist-demo
+        image: mcr.microsoft.com/azuredocs/samples-tf-mnist-demo:gpu
+        args: ["--max_steps", "500"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+      tolerations:
+      - key: "sku"
+        operator: "Equal"
+        value: "gpu"
+        effect: "NoSchedule"
+      volumes:
+      - name: blobinput
+        persistentVolumeClaim:
+           claimName: pvc-blob-input
+      - name: bloboutput
+        persistentVolumeClaim:
+           claimName: pvc-blob-output
