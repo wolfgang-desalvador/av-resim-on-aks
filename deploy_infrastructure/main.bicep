@@ -49,7 +49,7 @@ module aks 'aks/aks.bicep' = {
 module storageDnsZone 'privateDNSZone/privateDNSZone.bicep' = {
   name: 'storage-private-dns-zone'
   params: {
-    privateDNSZoneName: 'privatelink.blob.${environment().suffixes.storage}'
+    privateDNSZoneName: 'privatelink.dfs.${environment().suffixes.storage}'
     virtualNetworkName: virtualNetworkName
   }
 }

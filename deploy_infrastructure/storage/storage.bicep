@@ -107,7 +107,7 @@ resource storagePrivateEndpointBlob 'Microsoft.Network/privateEndpoints@2022-01-
         name: storagePleBlobName
         properties: {
           groupIds: [
-            'blob'
+            'dfs'
           ]
           privateLinkServiceId: storage.id
         }
@@ -121,7 +121,7 @@ resource storagePrivateEndpointBlob 'Microsoft.Network/privateEndpoints@2022-01-
 
 
 resource privateEndpointDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-01-01' = {
-  name: '${storagePrivateEndpointBlob.name}/blob-PrivateDnsZoneGroup'
+  name: '${storagePrivateEndpointBlob.name}/dfs-PrivateDnsZoneGroup'
   properties:{
     privateDnsZoneConfigs: [
       {
