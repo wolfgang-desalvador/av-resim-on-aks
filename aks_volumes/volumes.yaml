@@ -19,7 +19,7 @@ spec:
     driver: blob.csi.azure.com
     # volumeid has to be unique for every identical storage blob container in the cluster
     # character `#`and `/` are reserved for internal use and cannot be used in volumehandle
-    volumeHandle: input
+    volumeHandle: ${INPUT_STORAGE_ACCOUNT}_input
     volumeAttributes:
       protocol: fuse2
       storageAccount: $INPUT_STORAGE_ACCOUNT
@@ -50,7 +50,7 @@ spec:
     driver: blob.csi.azure.com
     # volumeid has to be unique for every identical storage blob container in the cluster
     # character `#`and `/` are reserved for internal use and cannot be used in volumehandle
-    volumeHandle: output
+    volumeHandle: ${OUTPUT_STORAGE_ACCOUNT}_output
     volumeAttributes:
       protocol: fuse2
       storageAccount: $OUTPUT_STORAGE_ACCOUNT

@@ -2,38 +2,38 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    app: run-<JOB_ID>
-  name: run-<JOB_ID>
+    app: run-<UUID>
+  name: run-<UUID>
 spec:
   template:
     metadata:
       labels:
-        app: run-<JOB_ID>
+        app: run-<UUID>
     spec:
       initContainers:
       - name: init-folders
         image: alpine:latest
-        command: ["mkdir /output/<UUID> && mkdir /input/<UUID>"]
+        command: ["mkdir", "-p", "/output/<UUID>", "&&", "mkdir", "-p", "/input/<UUID>"]
         volumeMounts:
-        - mountPath: /output
+        - mountPath: "/output"
           name: bloboutput
           readOnly: false
-        - mountPath: /input
+        - mountPath: "/input"
           name: blobinput
           readOnly: false
       containers:
-      - name: run-<JOB_ID>
-        image: <ACR_NAME>/io-test:latest
-        args: ["/etc/scripts/generate.sh && /etc/scripts/read.sh"]
-        imagePullPolicy: IfNotPresent
+      - name: run-<UUID>
+        image: <ACR_NAME>.azurecr.io/test-io:latest
+        args: ["/etc/scripts/generate.sh", "&&", "/etc/scripts/read.sh"]
+        imagePullPolicy: Always
         volumeMounts:
-        - mountPath: /output
+        - mountPath: "/output"
           name: bloboutput
           readOnly: false
           subPath: "<UUID>"
         - name: blobinput
           mountPath: "/runtime"
-          readOnly: true
+          readOnly: false
           subPath: "<DATASET>"
       - name: samples-tf-mnist-demo
         image: mcr.microsoft.com/azuredocs/samples-tf-mnist-demo:gpu
@@ -47,10 +47,10 @@ spec:
       - key: "sku"
         operator: "Equal"
         value: "gpu"
-        effect: "NoSchedule" 
+        effect: "NoSchedule"
       - key: "kubernetes.azure.com/scalesetpriority"
         value: "spot"
-        effect: "NoSchedule" 
+        effect: "NoSchedule"
         operator: "Equal"
       volumes:
       - name: blobinput
