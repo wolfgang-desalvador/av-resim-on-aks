@@ -34,12 +34,12 @@ kind: PersistentVolume
 metadata:
   annotations:
     pv.kubernetes.io/provisioned-by: blob.csi.azure.com
-  name: pv-blob-input
+  name: pv-blob-output
 spec:
   capacity:
     storage: 4096Gi
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteMany
   persistentVolumeReclaimPolicy: Retain  # If set as "Delete" container would be removed after pvc deletion
   storageClassName: azureblob-fuse-premium
   mountOptions:
