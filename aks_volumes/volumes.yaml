@@ -23,7 +23,7 @@ spec:
     volumeAttributes:
       protocol: fuse2
       storageAccount: $INPUT_STORAGE_ACCOUNT
-      containerName: $INPUT_CONTAINER_NAME
+      containerName: input
       use-adls: "true"
     nodeStageSecretRef:
       name: azure-sas-token-input
@@ -54,7 +54,7 @@ spec:
     volumeAttributes:
       protocol: fuse2
       storageAccount: $OUTPUT_STORAGE_ACCOUNT
-      containerName: $OUTPUT_CONTAINER_NAME
+      containerName: output
       use-adls: "true"
     nodeStageSecretRef:
       name: azure-sas-token-output
