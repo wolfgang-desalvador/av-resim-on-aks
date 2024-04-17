@@ -1,0 +1,13 @@
+apiVersion: nfd.k8s-sigs.io/v1alpha1
+kind: NodeFeatureRule
+metadata:
+  name: nfd-gpu-rule
+spec:
+   rules:
+   - name: "nfd-gpu-rule"
+     labels:
+        "feature.node.kubernetes.io/pci-10de.present": "true"
+     matchFeatures:
+        - feature: pci.device
+          matchExpressions:
+            vendor: {op: In, value: ["10de"]}

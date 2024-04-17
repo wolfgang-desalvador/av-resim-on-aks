@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: samples-tf-mnist-demo-ts
+  name: samples-tf-mnist-demo-ts
+spec:
+  completions: $NUMBER_OF_JOBS
+  parallelism: $NUMBER_OF_JOBS
+  completionMode: Indexed
+  template:
+    metadata:
+      labels:
+        app: samples-tf-mnist-demo-ts
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values:
+                - Standard_NC4as_T4_v3
+      containers:
+      - name: samples-tf-mnist-demo
+        image: mcr.microsoft.com/azuredocs/samples-tf-mnist-demo:gpu
+        args: ["--max_steps", "500"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      restartPolicy: OnFailure
+      tolerations:
+      - key: "sku"
+        operator: "Equal"
+        value: "gpu"
+        effect: "NoSchedule" 
+      - key: "kubernetes.azure.com/scalesetpriority"
+        value: "spot"
+        effect: "NoSchedule" 
+        operator: "Equal"
