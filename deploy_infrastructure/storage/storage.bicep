@@ -159,7 +159,7 @@ resource storagePrivateEndpointDfs 'Microsoft.Network/privateEndpoints@2022-01-0
 
 
 resource privateEndpointDnsDFS 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-01-01' = {
-  name: '${storagePrivateEndpointBlob.name}/dfs-PrivateDnsZoneGroup'
+  name: '${storagePrivateEndpointDfs.name}/dfs-PrivateDnsZoneGroup'
   properties:{
     privateDnsZoneConfigs: [
       {
