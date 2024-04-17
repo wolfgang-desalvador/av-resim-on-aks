@@ -169,14 +169,16 @@ helm install blob-csi-driver blob-csi-driver/blob-csi-driver --set node.enableBl
 
 
 ```bash
-export INPUT_STORAGE_ACCOUNT="avaksinput-${RAND}"
-export OUTPUT_STORAGE_ACCOUNT="avaksoutput-${RAND}"
+export INPUT_STORAGE_ACCOUNT="avaksinput${RAND}"
+export OUTPUT_STORAGE_ACCOUNT="avaksoutput${RAND}"
 envsubst < aks_volumes/volumes.yaml | kubectl apply -f -
 
-az storage container generate-sas --account-name $INPUT_STORAGE_ACCOUNT --name input --permissions acemdlrw --auth-mode login --as-user --expiry 2024-04-20
+export end=`date -u -d "2 days" '+%Y-%m-%dT%H:%MZ'`
+export INPUT_SAS=$(az storage container generate-sas --account-name $INPUT_STORAGE_ACCOUNT --name input --permissions acemdlrw --auth-mode login --as-user --expiry $end)
+export OUTPUT_SAS=$(az storage container generate-sas --account-name $OUTPUT_STORAGE_ACCOUNT --name output --permissions acemdlrw --auth-mode login --as-user --expiry $end)
 
-az storage container generate-sas --account-name mystorageaccount --as-user --auth-mode login --expiry 2020-01-01 --name container1 --permissions dlrw
-
+kubectl create secret generic azure-sas-token-input --from-literal azurestorageaccountname=$INPUT_STORAGE_ACCOUNT --from-literal azurestorageaccountsastoken=$INPUT_SAS
+kubectl create secret generic azure-sas-token-output --from-literal azurestorageaccountname=$OUTPUT_STORAGE_ACCOUNT --from-literal azurestorageaccountsastoken=$OUTPUT_SAS
 ```
 
 ## Submit an example job which is performing I/O

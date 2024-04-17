@@ -57,7 +57,7 @@ spec:
       containerName: $OUTPUT_CONTAINER_NAME
       use-adls: "true"
     nodeStageSecretRef:
-      name: azure-sas-token-otuput
+      name: azure-sas-token-output
       namespace: default
 ---
 apiVersion: v1
