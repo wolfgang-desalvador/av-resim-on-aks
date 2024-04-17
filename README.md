@@ -169,9 +169,14 @@ helm install blob-csi-driver blob-csi-driver/blob-csi-driver --set node.enableBl
 
 
 ```bash
-export INPUT_STORAGE_ACCOUNT="input-${RAND}"
-export OUTPUT_STORAGE_ACCOUNT="output-${RAND}"
+export INPUT_STORAGE_ACCOUNT="avaksinput-${RAND}"
+export OUTPUT_STORAGE_ACCOUNT="avaksoutput-${RAND}"
 envsubst < aks_volumes/volumes.yaml | kubectl apply -f -
+
+az storage container generate-sas --account-name $INPUT_STORAGE_ACCOUNT --name input --permissions acemdlrw --auth-mode login --as-user --expiry 2024-04-20
+
+az storage container generate-sas --account-name mystorageaccount --as-user --auth-mode login --expiry 2020-01-01 --name container1 --permissions dlrw
+
 ```
 
 ## Submit an example job which is performing I/O

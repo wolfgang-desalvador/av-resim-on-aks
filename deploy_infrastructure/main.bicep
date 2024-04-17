@@ -46,8 +46,16 @@ module aks 'aks/aks.bicep' = {
   }
 }
 
-module storageDnsZone 'privateDNSZone/privateDNSZone.bicep' = {
-  name: 'storage-private-dns-zone'
+module blobDnsZone 'privateDNSZone/privateDNSZone.bicep' = {
+  name: 'blob-private-dns-zone'
+  params: {
+    privateDNSZoneName: 'privatelink.blob.${environment().suffixes.storage}'
+    virtualNetworkName: virtualNetworkName
+  }
+}
+
+module dfsDnsZone 'privateDNSZone/privateDNSZone.bicep' = {
+  name: 'dfs-private-dns-zone'
   params: {
     privateDNSZoneName: 'privatelink.dfs.${environment().suffixes.storage}'
     virtualNetworkName: virtualNetworkName
@@ -56,11 +64,10 @@ module storageDnsZone 'privateDNSZone/privateDNSZone.bicep' = {
 
 module inputStorage 'storage/storage.bicep' = {
   name: 'input-storage'
-  dependsOn: [storageDnsZone]
+  dependsOn: [dfsDnsZone, blobDnsZone]
   params: {
     location: location
     virtualNetworkName: virtualNetworkName
-    privateDNSZoneName: storageDnsZone.outputs.privateDNSZoneName
     subnetName: subnetName
     storageName: 'avaksinput${random}'
     containerName: 'input'
@@ -69,11 +76,10 @@ module inputStorage 'storage/storage.bicep' = {
 
 module outputStorage 'storage/storage.bicep' = {
   name: 'output-storage'
-  dependsOn: [storageDnsZone]
+  dependsOn: [dfsDnsZone, blobDnsZone]
   params: {
     location: location
     virtualNetworkName: virtualNetworkName
-    privateDNSZoneName: storageDnsZone.outputs.privateDNSZoneName
     subnetName: subnetName
     storageName: 'avaksoutput${random}'
     containerName: 'output'

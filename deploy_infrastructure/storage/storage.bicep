@@ -14,10 +14,6 @@ param virtualNetworkName string
 @description('Name of the container to be created')
 param containerName string
 
-@description('Private DNS Zone Name')
-param privateDNSZoneName string
-
-
 @allowed([
   'Standard_LRS'
   'Standard_ZRS'
@@ -34,14 +30,19 @@ param storageSkuName string = 'Standard_ZRS'
 var storageNameCleaned = replace(storageName, '-', '')
 
 var blobPrivateDnsZoneName = 'privatelink.blob.${environment().suffixes.storage}'
+var dfsPrivateDnsZoneName = 'privatelink.dfs.${environment().suffixes.storage}'
 
-var storagePleBlobName = '${storageNameCleaned}-pe'
+var storagePleBlobName = '${storageNameCleaned}-blob-pe'
+var storagePleDfsName = '${storageNameCleaned}-dfs-pe'
 
 
 resource blobPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
-  name: privateDNSZoneName
+  name: blobPrivateDnsZoneName
 }
 
+resource dfsPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' existing = {
+  name: dfsPrivateDnsZoneName
+}
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2020-08-01' existing = {
   name: virtualNetworkName
@@ -107,6 +108,43 @@ resource storagePrivateEndpointBlob 'Microsoft.Network/privateEndpoints@2022-01-
         name: storagePleBlobName
         properties: {
           groupIds: [
+            'blob'
+          ]
+          privateLinkServiceId: storage.id
+        }
+      }
+    ]
+    subnet: {
+      id: subnet.id
+    }
+  }
+}
+
+
+resource privateEndpointDnsBlob 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-01-01' = {
+  name: '${storagePrivateEndpointBlob.name}/blob-PrivateDnsZoneGroup'
+  properties:{
+    privateDnsZoneConfigs: [
+      {
+        name: blobPrivateDnsZoneName
+        properties:{
+          privateDnsZoneId: blobPrivateDnsZone.id
+        }
+      }
+    ]
+  }
+}
+
+
+resource storagePrivateEndpointDfs 'Microsoft.Network/privateEndpoints@2022-01-01' = {
+  name: storagePleDfsName
+  location: location
+  properties: {
+    privateLinkServiceConnections: [
+      { 
+        name: storagePleDfsName
+        properties: {
+          groupIds: [
             'dfs'
           ]
           privateLinkServiceId: storage.id
@@ -120,19 +158,20 @@ resource storagePrivateEndpointBlob 'Microsoft.Network/privateEndpoints@2022-01-
 }
 
 
-resource privateEndpointDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-01-01' = {
+resource privateEndpointDnsDFS 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-01-01' = {
   name: '${storagePrivateEndpointBlob.name}/dfs-PrivateDnsZoneGroup'
   properties:{
     privateDnsZoneConfigs: [
       {
-        name: blobPrivateDnsZoneName
+        name: dfsPrivateDnsZoneName
         properties:{
-          privateDnsZoneId: blobPrivateDnsZone.id
+          privateDnsZoneId: dfsPrivateDnsZone.id
         }
       }
     ]
   }
 }
+
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' existing = {
   name: storageNameCleaned
@@ -152,6 +191,3 @@ resource container 'Microsoft.Storage/storageAccounts/blobServices/containers@20
     metadata: {}
   }
 }
-
-output containerName string = containerName
-output blob string = '${storageNameCleaned}.blob.${environment().suffixes.storage}'
