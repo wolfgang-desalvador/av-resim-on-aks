@@ -4,9 +4,6 @@ import subprocess
 import os
 
 
-YAML_TEMPLATE = os.path.dirname(__file__) + os.sep + 'template_job.yaml'
-
-
 def replaceInLines(lines, pattern, value):
     newLines = []
     for line in lines:
@@ -17,10 +14,10 @@ def replaceInLines(lines, pattern, value):
     return newLines
 
 
-def create_yaml_job(acrName):
+def create_yaml_job(yaml_template, acrName):
     """Create yaml job."""
 
-    with open(YAML_TEMPLATE, 'r') as fid:
+    with open(yaml_template, 'r') as fid:
         template_lines = fid.readlines()
 
     jobUUID = str(uuid.uuid4())
@@ -43,8 +40,11 @@ if __name__ == '__main__':
     
     parser.add_argument('--acrName', type=str,
                         help='Name of the container registry containing Docker job images.')
+    
+    parser.add_argument('--jobTemplate', type=str, default=os.path.dirname(__file__) + os.sep + 'template_job.yaml',
+                        help='Job template to submit')
 
     args = parser.parse_args()
 
     for job in range(0, args.njobs):
-        subprocess.check_output(["/usr/local/bin/kubectl", "apply", "-f", create_yaml_job(args.acrName)])
+        subprocess.check_output(["/usr/local/bin/kubectl", "apply", "-f", create_yaml_job(args.jobTemplate, args.acrName)])

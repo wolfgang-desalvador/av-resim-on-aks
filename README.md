@@ -228,3 +228,31 @@ Let's submit 20 parallel jobs simulating an embarassingly parallel workload of a
 python3 submit.py --acrName $ACR_NAME --njobs 20
 ```
 
+## Build Metaseq image
+
+To build Metaseq image, follow to recipe described in [AI on AKS](https://github.com/edwardsp/ai-on-aks#metaseq)
+
+It is assumed that image is pushed in the container as `$ACR_NAME.azurecr.io/metaseq`
+
+## Create an A100 GPU Node Pool to test Metaseq
+
+Let's create a node pool with `Standard_NCA100ads_A100_v4` expliciting asking AKS not to manage the GPU driver installation (since it will be managed by NVIDIA Network operator) using `SkipGPUDriverInstall=True`
+
+```bash
+ az aks nodepool add \
+    --resource-group $RESOURCE_GROUP_NAME \
+    --cluster-name $AKS_CLUSTER_NAME \
+    --name nc48a100 \
+    --node-taints sku=gpu:NoSchedule \
+    --node-vm-size Standard_NCA100ads_A100_v4 \
+    --enable-cluster-autoscaler \
+    --min-count 1 --max-count 5 --node-count 1 --tags SkipGPUDriverInstall=True --priority Spot
+```
+
+## Submit 1 jobs with I/O and Metaseq running on 2 GPUs
+
+Let's submit 20 parallel jobs simulating an embarassingly parallel workload of a re-simulation scenario:
+
+```bash
+python3 submit.py --acrName $ACR_NAME --njobs 1 --jobTemplate "template_job_metaseq.yaml"
+```

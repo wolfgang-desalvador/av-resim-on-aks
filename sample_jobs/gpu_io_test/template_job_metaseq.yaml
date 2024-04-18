@@ -1,0 +1,80 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app: run-<UUID>
+  name: run-<UUID>
+spec:
+  template:
+    metadata:
+      labels:
+        app: run-<UUID>
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values:
+                - Standard_NC48ads_A100_v4
+      initContainers:
+      - name: init-folders
+        image: alpine:latest
+        command: ["mkdir", "-p", "/output/<UUID>", "&&", "mkdir", "-p", "/input/<UUID>"]
+        volumeMounts:
+        - mountPath: "/output"
+          name: bloboutput
+          readOnly: false
+        - mountPath: "/input"
+          name: blobinput
+          readOnly: false
+      containers:
+      - name: run-<UUID>
+        image: <ACR_NAME>.azurecr.io/test-io:latest
+        args: ["/etc/scripts/generateAndRead.sh"]
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: "/output"
+          name: bloboutput
+          readOnly: false
+          subPath: "<UUID>"
+        - name: blobinput
+          mountPath: "/runtime"
+          readOnly: false
+          subPath: "<UUID>"
+      - name: samples-tf-mnist-demo
+        image: <ACR_NAME>.azurecr.io/metaseq:latest
+        args: ["opt-baselines", "--model-size", "8m", "--benchmark", "-t", "10", "-g", "2", "-n", "1", "-p", "test-125m", "--local", "--azure", "--no-save-dir"]
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            nvidia.com/gpu: 2
+        env:
+        - name: USER
+          value: "azureuser"
+      restartPolicy: Never
+      hostIPC: true
+      tolerations:
+      - key: "sku"
+        operator: "Equal"
+        value: "gpu"
+        effect: "NoSchedule"
+      - key: "kubernetes.azure.com/scalesetpriority"
+        value: "spot"
+        effect: "NoSchedule"
+        operator: "Equal"
+      volumes:
+      - name: blobinput
+        persistentVolumeClaim:
+           claimName: pvc-blob-input
+      - name: bloboutput
+        persistentVolumeClaim:
+           claimName: pvc-blob-output
+      - name: scratch
+        hostPath:
+          # directory location on host
+          path: /mnt/tmp/<UUID>
+          type: DirectoryOrCreate
+          # this field is optional
