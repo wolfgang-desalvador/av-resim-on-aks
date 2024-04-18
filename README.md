@@ -181,6 +181,19 @@ kubectl create secret generic azure-sas-token-input --from-literal azurestoragea
 kubectl create secret generic azure-sas-token-output --from-literal azurestorageaccountname=$OUTPUT_STORAGE_ACCOUNT --from-literal azurestorageaccountsastoken=$OUTPUT_SAS  --type=Opaque
 ```
 
-## Submit an example job which is performing I/O
+## Build the Docker image for the job with GPU load and I/O
 
+
+```bash
+cd sample_jobs/gpu_io_test
+docker build . -t . -t $ACR_NAME.azurecr.io/test-io
+dokcer push $ACR_NAME.azurecr.io/test-io
+```
+
+## Submit 20 jobs with I/O and GPU load
+
+```bash
+cd sample_jobs/gpu_io_test
+python3 submit.py --acrName $ACR_NAME --njobs 20
+```
 
