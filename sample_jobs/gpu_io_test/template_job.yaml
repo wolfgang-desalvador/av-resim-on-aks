@@ -34,7 +34,7 @@ spec:
         - name: blobinput
           mountPath: "/runtime"
           readOnly: false
-          subPath: "<DATASET>"
+          subPath: "<UUID>"
       - name: samples-tf-mnist-demo
         image: mcr.microsoft.com/azuredocs/samples-tf-mnist-demo:gpu
         args: ["--max_steps", "500"]
