@@ -46,7 +46,7 @@ spec:
           subPath: "<UUID>"
       - name: samples-tf-mnist-demo
         image: <ACR_NAME>.azurecr.io/metaseq:latest
-        args: ["opt-baselines", "--model-size", "8m", "--benchmark", "-t", "10", "-g", "2", "-n", "1", "-p", "test-125m", "--local", "--azure", "--no-save-dir"]
+        args: ["opt-baselines", "--model-size", "8m", "--benchmark", "-t", "100", "-g", "2", "-n", "1", "-p", "test-125m", "--local", "--azure", "--no-save-dir"]
         imagePullPolicy: IfNotPresent
         resources:
           limits:
