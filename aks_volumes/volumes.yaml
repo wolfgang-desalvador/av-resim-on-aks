@@ -13,7 +13,11 @@ spec:
   storageClassName: azureblob-fuse-premium
   mountOptions:
     - -o allow_other
-    - --file-cache-timeout-in-seconds=120
+    - --block-cache
+    - --block-cache-block-size=16
+    - --block-cache-disk-size=50000
+    - --block-cache-parallelism=36
+    - --block-cache-prefetch=128
     - --use-adls=true
   csi:
     driver: blob.csi.azure.com
@@ -44,7 +48,11 @@ spec:
   storageClassName: azureblob-fuse-premium
   mountOptions:
     - -o allow_other
-    - --file-cache-timeout-in-seconds=120
+    - --block-cache
+    - --block-cache-block-size=16
+    - --block-cache-disk-size=50000
+    - --block-cache-parallelism=36
+    - --block-cache-prefetch=128
     - --use-adls=true
   csi:
     driver: blob.csi.azure.com
