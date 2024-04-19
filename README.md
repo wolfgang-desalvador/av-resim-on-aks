@@ -205,8 +205,8 @@ export end=`date -u -d "2 days" '+%Y-%m-%dT%H:%M:%SZ'`
 export start=`date -u '+%Y-%m-%dT%H:%M:%SZ'`
 export INPUT_ACCOUNT_KEY="$(az storage account keys list -g $RESOURCE_GROUP_NAME -n $INPUT_STORAGE_ACCOUNT --query "[?keyName=='key1'].value" --output tsv)"
 export OUTPUT_ACCOUNT_KEY="$(az storage account keys list -g $RESOURCE_GROUP_NAME -n $OUTPUT_STORAGE_ACCOUNT --query "[?keyName=='key1'].value" --output tsv)"
-export INPUT_SAS=$(az storage container generate-sas --account-name "$INPUT_STORAGE_ACCOUNT" --name input --permissions acdefilmrtwxy --account-key "$INPUT_ACCOUNT_KEY" --https-only)
-export OUTPUT_SAS=$(az storage container generate-sas --account-name "$OUTPUT_STORAGE_ACCOUNT" --name output --permissions acdefilmrtwxy --account-key "$OUTPUT_ACCOUNT_KEY" --https-only)
+export INPUT_SAS="$(az storage container generate-sas --account-name "$INPUT_STORAGE_ACCOUNT" --name input --permissions acdefilmrtwxy --account-key "$INPUT_ACCOUNT_KEY" --https-only)"
+export OUTPUT_SAS="$(az storage container generate-sas --account-name "$OUTPUT_STORAGE_ACCOUNT" --name output --permissions acdefilmrtwxy --account-key "$OUTPUT_ACCOUNT_KEY" --https-only)"
 
 kubectl create secret generic azure-sas-token-input --from-literal azurestorageaccountname="$INPUT_STORAGE_ACCOUNT" --from-literal azurestorageaccountsastoken="$INPUT_SAS"  --type=Opaque
 kubectl create secret generic azure-sas-token-output --from-literal azurestorageaccountname="$OUTPUT_STORAGE_ACCOUNT" --from-literal azurestorageaccountsastoken="$OUTPUT_SAS"  --type=Opaque
